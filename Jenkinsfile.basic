@@ -49,18 +49,19 @@ pipeline {
             steps {
                 echo 'Running flake8 code quality check...'
                 sh '''
-                    # Use available Python command
-                    if command -v python3 &> /dev/null; then
-                        PYTHON_CMD="python3"
-                        PIP_CMD="pip3"
-                    else
-                        PYTHON_CMD="python"
-                        PIP_CMD="pip"
-                    fi
+                    # Create virtual environment to avoid externally-managed-environment error
+                    python3 -m venv venv
+                    source venv/bin/activate
                     
-                    $PIP_CMD install --user flake8
-                    $PYTHON_CMD -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
-                    $PYTHON_CMD -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+                    # Install flake8 in virtual environment
+                    pip install flake8
+                    
+                    # Run flake8 checks
+                    flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
+                    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+                    
+                    # Deactivate virtual environment
+                    deactivate
                 '''
             }
         }
@@ -69,17 +70,18 @@ pipeline {
             steps {
                 echo 'Running unit tests...'
                 sh '''
-                    # Use available Python command
-                    if command -v python3 &> /dev/null; then
-                        PYTHON_CMD="python3"
-                        PIP_CMD="pip3"
-                    else
-                        PYTHON_CMD="python"
-                        PIP_CMD="pip"
-                    fi
+                    # Create virtual environment to avoid externally-managed-environment error
+                    python3 -m venv venv
+                    source venv/bin/activate
                     
-                    $PIP_CMD install --user -r requirements.txt
-                    $PYTHON_CMD -m pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing || echo "Tests completed with some failures"
+                    # Install requirements in virtual environment
+                    pip install -r requirements.txt
+                    
+                    # Run tests
+                    pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing || echo "Tests completed with some failures"
+                    
+                    # Deactivate virtual environment
+                    deactivate
                 '''
             }
         }

@@ -6,7 +6,7 @@ pipeline {
         DOCKER_TAG = "${env.BUILD_NUMBER}"
         DOCKER_REGISTRY = 'docker.io'
         JENKINS_SERVER = '5.161.59.136:8080'
-        ADMIN_EMAIL = 'hassanejaz400@gmail.com'  // Update with your admin email
+        ADMIN_EMAIL = 'hassanejaz400@gmail.com'
     }
     
     stages {
@@ -17,23 +17,34 @@ pipeline {
             }
         }
         
+        stage('Install System Packages') {
+            steps {
+                echo 'Installing system packages...'
+                sh '''
+                    # Update package list
+                    apt-get update
+                    
+                    # Install Python development packages
+                    apt-get install -y python3-venv python3-pip python3-dev
+                    
+                    # Install flake8 system package
+                    apt-get install -y python3-flake8
+                    
+                    # Install pytest system package
+                    apt-get install -y python3-pytest python3-pytest-cov
+                    
+                    echo "System packages installed successfully"
+                '''
+            }
+        }
+        
         stage('Code Quality Check') {
             steps {
                 echo 'Running flake8 code quality check...'
                 sh '''
-                    # Create virtual environment to avoid externally-managed-environment error
-                    python3 -m venv venv
-                    source venv/bin/activate
-                    
-                    # Install flake8 in virtual environment
-                    pip install flake8
-                    
-                    # Run flake8 checks
+                    # Use system-installed flake8
                     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
                     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-                    
-                    # Deactivate virtual environment
-                    deactivate
                 '''
             }
         }
@@ -42,31 +53,19 @@ pipeline {
             steps {
                 echo 'Running unit tests...'
                 sh '''
-                    # Create virtual environment to avoid externally-managed-environment error
+                    # Create virtual environment for project dependencies
                     python3 -m venv venv
                     source venv/bin/activate
                     
-                    # Install requirements in virtual environment
+                    # Install only project-specific requirements
                     pip install -r requirements.txt
                     
-                    # Run tests
+                    # Run tests using system pytest with virtual environment
                     pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing || echo "Tests completed with some failures"
                     
                     # Deactivate virtual environment
                     deactivate
                 '''
-            }
-            post {
-                always {
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'htmlcov',
-                        reportFiles: 'index.html',
-                        reportName: 'Coverage Report'
-                    ])
-                }
             }
         }
         
@@ -124,7 +123,7 @@ pipeline {
                 <p><strong>Docker Image:</strong> ${DOCKER_IMAGE}:${DOCKER_TAG}</p>
                 <p><strong>DockerHub URL:</strong> <a href="https://hub.docker.com/r/${DOCKER_IMAGE}">https://hub.docker.com/r/${DOCKER_IMAGE}</a></p>
                 <p><strong>Build URL:</strong> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                <p>✅ All tests passed and Docker image has been successfully pushed to DockerHub.</p>
+                <p>✅ All tests passed and Docker image has been built successfully.</p>
                 <p>🚀 The application is now ready for deployment!</p>
                 """,
                 to: "${ADMIN_EMAIL}",
