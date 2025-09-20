@@ -13,7 +13,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Checking out code from repository...'
-                git branch: 'master', url: 'https://github.com/SanaUrooj29/Zomato-Price-Prediction.git'
+                git branch: 'dev', url: 'https://github.com/SanaUrooj29/Zomato-Price-Prediction.git'
             }
         }
         
