@@ -23,7 +23,7 @@ pipeline {
                 sh '''
                     # Create virtual environment to avoid externally-managed-environment error
                     python3 -m venv venv
-                    source venv/bin/activate
+                    . venv/bin/activate
                     
                     # Install flake8 in virtual environment
                     pip install flake8
@@ -44,7 +44,7 @@ pipeline {
                 sh '''
                     # Create virtual environment to avoid externally-managed-environment error
                     python3 -m venv venv
-                    source venv/bin/activate
+                    . venv/bin/activate
                     
                     # Install requirements in virtual environment
                     pip install -r requirements.txt
