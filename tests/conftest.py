@@ -7,8 +7,15 @@ import sys
 import tempfile
 import shutil
 import pickle
-import numpy as np
 from unittest.mock import MagicMock
+
+# Lazy import numpy to avoid import errors during pytest collection
+def get_numpy():
+    try:
+        import numpy as np
+        return np
+    except ImportError:
+        pytest.skip("numpy not available")
 
 # Add the parent directory to the path so we can import the app
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,6 +32,8 @@ def test_data_dir():
 @pytest.fixture(scope="session")
 def sample_model():
     """Create a sample model for testing"""
+    np = get_numpy()
+    
     # Create a mock ExtraTreesRegressor model
     mock_model = MagicMock()
     mock_model.predict.return_value = np.array([4.2])
