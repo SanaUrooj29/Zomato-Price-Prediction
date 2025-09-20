@@ -88,6 +88,32 @@ pipeline {
             }
         }
         
+        stage('Push to DockerHub') {
+            steps {
+                echo 'Pushing Docker image to DockerHub...'
+                script {
+                    if (fileExists('Dockerfile')) {
+                        // Login to DockerHub
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                            sh '''
+                                echo "Logging into DockerHub..."
+                                echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                                
+                                echo "Pushing image to DockerHub..."
+                                docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                                docker push ${DOCKER_IMAGE}:latest
+                                
+                                echo "Docker image pushed successfully to DockerHub!"
+                                echo "Image URL: https://hub.docker.com/r/${DOCKER_IMAGE}"
+                            '''
+                        }
+                    } else {
+                        echo "Dockerfile not found, skipping Docker push"
+                    }
+                }
+            }
+        }
+        
         stage('Security Scan') {
             steps {
                 echo 'Running security scan...'
