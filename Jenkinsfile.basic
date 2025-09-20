@@ -6,7 +6,7 @@ pipeline {
         DOCKER_TAG = "${env.BUILD_NUMBER}"
         DOCKER_REGISTRY = 'docker.io'
         JENKINS_SERVER = '5.161.59.136:8080'
-        ADMIN_EMAIL = 'hassanejaz400@gmail.com'  // Update with your admin email
+        ADMIN_EMAIL = 'hassanejaz400@gmail.com'
     }
     
     stages {
@@ -14,6 +14,34 @@ pipeline {
             steps {
                 echo 'Checking out code from repository...'
                 git branch: 'master', url: 'https://github.com/SanaUrooj29/Zomato-Price-Prediction.git'
+            }
+        }
+        
+        stage('Setup Python Environment') {
+            steps {
+                echo 'Setting up Python environment...'
+                sh '''
+                    # Check if Python is available
+                    if command -v python3 &> /dev/null; then
+                        echo "Python3 found"
+                        PYTHON_CMD="python3"
+                    elif command -v python &> /dev/null; then
+                        echo "Python found"
+                        PYTHON_CMD="python"
+                    else
+                        echo "Installing Python..."
+                        apt-get update && apt-get install -y python3 python3-pip
+                        PYTHON_CMD="python3"
+                    fi
+                    
+                    # Install pip if not available
+                    if ! command -v pip3 &> /dev/null && ! command -v pip &> /dev/null; then
+                        echo "Installing pip..."
+                        apt-get install -y python3-pip
+                    fi
+                    
+                    echo "Python setup complete"
+                '''
             }
         }
         
@@ -53,18 +81,6 @@ pipeline {
                     $PIP_CMD install --user -r requirements.txt
                     $PYTHON_CMD -m pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing || echo "Tests completed with some failures"
                 '''
-            }
-            post {
-                always {
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'htmlcov',
-                        reportFiles: 'index.html',
-                        reportName: 'Coverage Report'
-                    ])
-                }
             }
         }
         
@@ -122,7 +138,7 @@ pipeline {
                 <p><strong>Docker Image:</strong> ${DOCKER_IMAGE}:${DOCKER_TAG}</p>
                 <p><strong>DockerHub URL:</strong> <a href="https://hub.docker.com/r/${DOCKER_IMAGE}">https://hub.docker.com/r/${DOCKER_IMAGE}</a></p>
                 <p><strong>Build URL:</strong> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                <p>✅ All tests passed and Docker image has been successfully pushed to DockerHub.</p>
+                <p>✅ All tests passed and Docker image has been built successfully.</p>
                 <p>🚀 The application is now ready for deployment!</p>
                 """,
                 to: "${ADMIN_EMAIL}",
