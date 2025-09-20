@@ -23,10 +23,20 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
+    - name: Generate model.pkl for testing
+      run: |
+        echo "🤖 Generating model.pkl for testing..."
+        python model.py
+    
     - name: Run unit tests
       run: |
         echo "🧪 Running unit tests..."
-        pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing
+        echo "Current directory: $(pwd)"
+        echo "Files in current directory:"
+        ls -la
+        echo "Files in tests directory:"
+        ls -la tests/ || echo "tests directory not found"
+        pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing --tb=short
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3

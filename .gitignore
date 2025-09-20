@@ -251,7 +251,6 @@ local.properties
 
 # Machine Learning specific
 # Model files (uncomment if you don't want to track model files)
-# *.pkl
 # *.joblib
 # *.h5
 # *.hdf5

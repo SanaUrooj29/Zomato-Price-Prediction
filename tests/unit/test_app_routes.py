@@ -91,9 +91,10 @@ class TestFlaskRoutes:
     @pytest.mark.unit
     def test_predict_route_invalid_data(self, client, invalid_form_data):
         """Test the predict route with invalid data types"""
-        # This should raise a ValueError when trying to convert invalid strings to int
-        with pytest.raises(ValueError):
-            response = client.post('/predict', data=invalid_form_data)
+        # The app should handle invalid data gracefully and return an error message
+        response = client.post('/predict', data=invalid_form_data)
+        assert response.status_code == 200
+        assert b'Error:' in response.data
     
     @pytest.mark.unit
     def test_predict_route_empty_data(self, client):

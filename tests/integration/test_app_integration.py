@@ -164,19 +164,33 @@ class TestIntegration:
     @pytest.mark.integration
     def test_model_loading_integration(self):
         """Test that the model loads correctly in the application context"""
-        # This test ensures the model is loaded when the app starts
-        from app import model
+        # Get the project root directory
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        model_path = os.path.join(project_root, 'model.pkl')
         
-        assert model is not None, "Model not loaded"
-        assert hasattr(model, 'predict'), "Model missing predict method"
+        # Check if model file exists first
+        if not os.path.exists(model_path):
+            pytest.skip("Model file 'model.pkl' not found. Run model.py to generate it.")
         
-        # Test a simple prediction
-        test_input = [[1, 0, 100, 5, 10, 15, 500, 20]]
-        prediction = model.predict(test_input)
+        # Temporarily change to project root directory to import app
+        original_cwd = os.getcwd()
+        os.chdir(project_root)
         
-        assert prediction is not None, "Model prediction failed"
-        assert len(prediction) == 1, "Expected single prediction"
-        assert 0 <= prediction[0] <= 5, f"Invalid prediction: {prediction[0]}"
+        try:
+            from app import model
+            
+            assert model is not None, "Model not loaded"
+            assert hasattr(model, 'predict'), "Model missing predict method"
+            
+            # Test a simple prediction
+            test_input = [[1, 0, 100, 5, 10, 15, 500, 20]]
+            prediction = model.predict(test_input)
+            
+            assert prediction is not None, "Model prediction failed"
+            assert len(prediction) == 1, "Expected single prediction"
+            assert 0 <= prediction[0] <= 5, f"Invalid prediction: {prediction[0]}"
+        finally:
+            os.chdir(original_cwd)
     
     @pytest.mark.integration
     def test_error_handling_integration(self, client_with_real_model):
