@@ -259,6 +259,8 @@ local.properties
 # *.pt
 # *.ckpt
 # *.safetensors
+*.pkl
+model.pkl
 
 # Data files (uncomment if you don't want to track data files)
 # *.csv
