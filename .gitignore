@@ -351,6 +351,7 @@ bin/*
 include/*
 lib/*
 share/*
+bin/*
 
 # Test coverage reports
 htmlcov/
