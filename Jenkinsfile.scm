@@ -6,14 +6,14 @@ pipeline {
         DOCKER_TAG = "${env.BUILD_NUMBER}"
         DOCKER_REGISTRY = 'docker.io'
         JENKINS_SERVER = '5.161.59.136:8080'
-        ADMIN_EMAIL = 'hassanejaz400@gmail.com'  // Update with your admin email
+        ADMIN_EMAIL = 'hassanejaz400@gmail.com'
     }
     
     stages {
         stage('Checkout') {
             steps {
                 echo 'Checking out code from repository...'
-                git branch: 'master', url: 'https://github.com/SanaUrooj29/Zomato-Price-Prediction.git'
+                checkout scm
             }
         }
         
