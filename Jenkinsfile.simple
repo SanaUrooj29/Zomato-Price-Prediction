@@ -9,9 +9,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'masteroz/zomato-flask-app'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
-        DOCKER_REGISTRY = 'docker.io'
-        JENKINS_SERVER = '5.161.59.136:8080'
-        ADMIN_EMAIL = 'hassanejaz400@gmail.com'  // Update with your admin email
+        ADMIN_EMAIL = 'hassanejaz400@gmail.com'
     }
     
     stages {
@@ -41,51 +39,14 @@ pipeline {
                     pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing
                 '''
             }
-            post {
-                always {
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'htmlcov',
-                        reportFiles: 'index.html',
-                        reportName: 'Coverage Report'
-                    ])
-                }
-            }
         }
         
         stage('Build Docker Image') {
-            agent {
-                docker {
-                    image 'docker:latest'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
             steps {
                 echo 'Building Docker image...'
-                script {
-                    def image = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'dockerhub-credentials') {
-                        image.push()
-                        image.push('latest')
-                    }
-                }
-            }
-        }
-        
-        stage('Security Scan') {
-            agent {
-                docker {
-                    image 'aquasec/trivy:latest'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
-            steps {
-                echo 'Running security scan on Docker image...'
                 sh '''
-                    trivy image --exit-code 0 --severity HIGH,CRITICAL \
-                    ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                    docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
                 '''
             }
         }
@@ -107,9 +68,7 @@ pipeline {
                 <p><strong>Branch:</strong> ${env.BRANCH_NAME}</p>
                 <p><strong>Commit:</strong> ${env.GIT_COMMIT}</p>
                 <p><strong>Docker Image:</strong> ${DOCKER_IMAGE}:${DOCKER_TAG}</p>
-                <p><strong>DockerHub URL:</strong> <a href="https://hub.docker.com/r/${DOCKER_IMAGE}">https://hub.docker.com/r/${DOCKER_IMAGE}</a></p>
-                <p><strong>Build URL:</strong> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                <p>✅ All tests passed and Docker image has been successfully pushed to DockerHub.</p>
+                <p>✅ All tests passed and Docker image has been built successfully.</p>
                 <p>🚀 The application is now ready for deployment!</p>
                 """,
                 to: "${ADMIN_EMAIL}",
