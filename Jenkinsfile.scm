@@ -21,9 +21,9 @@ pipeline {
             steps {
                 echo 'Running flake8 code quality check...'
                 sh '''
-                    python -m pip install flake8
-                    flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-                    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+                    python3 -m pip install --user flake8
+                    python3 -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+                    python3 -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
                 '''
             }
         }
@@ -32,8 +32,8 @@ pipeline {
             steps {
                 echo 'Running unit tests...'
                 sh '''
-                    python -m pip install -r requirements.txt
-                    python -m pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing
+                    python3 -m pip install --user -r requirements.txt
+                    python3 -m pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing
                 '''
             }
             post {

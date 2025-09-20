@@ -1,12 +1,17 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.11-slim'
+            args '-u root:root'
+        }
+    }
     
     environment {
         DOCKER_IMAGE = 'masteroz/zomato-flask-app'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
         DOCKER_REGISTRY = 'docker.io'
         JENKINS_SERVER = '5.161.59.136:8080'
-        ADMIN_EMAIL = 'hassanejaz400@gmail.com'  // Update with your admin email
+        ADMIN_EMAIL = 'hassanejaz400@gmail.com'
     }
     
     stages {
@@ -21,9 +26,9 @@ pipeline {
             steps {
                 echo 'Running flake8 code quality check...'
                 sh '''
-                    python3 -m pip install --user flake8
-                    python3 -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-                    python3 -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+                    pip install flake8
+                    flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+                    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
                 '''
             }
         }
@@ -32,8 +37,8 @@ pipeline {
             steps {
                 echo 'Running unit tests...'
                 sh '''
-                    python3 -m pip install --user -r requirements.txt
-                    python3 -m pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing
+                    pip install -r requirements.txt
+                    pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing
                 '''
             }
             post {
@@ -51,6 +56,12 @@ pipeline {
         }
         
         stage('Build Docker Image') {
+            agent {
+                docker {
+                    image 'docker:latest'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             steps {
                 echo 'Building Docker image...'
                 script {
@@ -64,11 +75,16 @@ pipeline {
         }
         
         stage('Security Scan') {
+            agent {
+                docker {
+                    image 'aquasec/trivy:latest'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             steps {
                 echo 'Running security scan on Docker image...'
                 sh '''
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                    -v /tmp:/tmp aquasec/trivy image --exit-code 0 --severity HIGH,CRITICAL \
+                    trivy image --exit-code 0 --severity HIGH,CRITICAL \
                     ${DOCKER_IMAGE}:${DOCKER_TAG}
                 '''
             }
